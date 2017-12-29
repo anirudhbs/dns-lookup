@@ -6,7 +6,7 @@ const HOST = '8.8.8.8'
 function sendQuery (buf) {
   client.send(buf, PORT, HOST, (err) => {
     if (err) throw err
-    console.log('sent')
+    console.log('sent request')
   })
 }
 
@@ -16,7 +16,7 @@ client.on('message', (msg, cb) => {
 })
 
 function closeIt () {
-  console.log('closing')
+  console.log('closing socket')
   client.close()
 }
 
@@ -38,10 +38,10 @@ function stringToHex (string) {
   return hex.join('')
 }
 
-function makeQuery (site) {
-  const splitup = site.split('.')
+function makeQuery (url, queryType) {
+  const splitUp = url.split('.')
   const hexString = []
-  splitup.map((cur) => {
+  splitUp.map((cur) => {
     const length = cur.length.toString(16)
     if (length.length === 1) hexString.push('0' + length)
     else hexString.push(length)
@@ -49,14 +49,25 @@ function makeQuery (site) {
     hexString.push(stringToHex(cur))
   })
   hexString.push('00') // for the last . in url
-  hexString.push('0001') // type
+  hexString.push(getType(queryType)) // type
   hexString.push('0001') // class
   return hexString.join('')
 }
 
+function getType (type) {
+  switch (type) {
+    case 'ns': return '0002'
+    case 'soa': return '0006'
+    case 'cname': return '0005'
+    case 'mx': return '000f'
+    case 'txt': return '0010'
+    case 'aaaa': return '001c'
+    default: return '0001' // 'a'
+  }
+}
+
 const header = '26f501000001000000000000'
-// const query = '14746865626573746d6f746865726675636b696e6707776562736974650000010001'
-const query = makeQuery('thebestmotherfucking.website')
+const query = makeQuery('google.com', 'a')
 const buf1 = Buffer.from(header + query, 'hex')
 
 sendQuery(buf1)
