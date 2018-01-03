@@ -3,7 +3,7 @@ const client = dgram.createSocket('udp4')
 const query = require('./src/query')
 const response = require('./src/response')
 
-function sendQuery (buf, HOST = '8.8.8.8', PORT = 53) {
+function sendQuery(buf, HOST = '8.8.8.8', PORT = 53) {
   client.send(buf, PORT, HOST, (err) => {
     if (err) throw err
     console.log('sent request')
@@ -12,18 +12,18 @@ function sendQuery (buf, HOST = '8.8.8.8', PORT = 53) {
 
 client.on('message', (msg) => {
   // console.log('res', msg.toString('hex'))
-  console.log(response.getObject(query1, msg.toString('hex')))
-  // console.log(hexToString(msg.toString('hex')))
+
+  console.log(response.getObject(query1, msg.toString('hex'), domain))
   closeIt()
 })
 
-function closeIt () {
+function closeIt() {
   client.close(() => {
     console.log('closed socket')
   })
 }
 
-function hexToString (hex) {
+function hexToString(hex) {
   const arr = []
   hex.match(/.{2}/g).map((cur) => {
     arr.push(String.fromCharCode(parseInt(cur, 16)))
@@ -31,6 +31,8 @@ function hexToString (hex) {
   return arr.join('')
 }
 
-const query1 = query.formRequest('google.com', 'a', true)
+const domain = 'twitter.com'
+const type = 'mx'
+const query1 = query.formRequest(domain, type, true)
 const buf = Buffer.from(query1, 'hex')
 sendQuery(buf)

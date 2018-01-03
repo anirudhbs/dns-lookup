@@ -1,5 +1,3 @@
-const name = 'PLACEHOLDERNAME'
-
 const answerCount = (res) => parseInt(res.slice(12, 16))
 
 function separateAnswers(req, res) {
@@ -7,7 +5,7 @@ function separateAnswers(req, res) {
   return answers.split('c00c').filter((cur) => cur.length > 0)
 }
 
-function getObject(req, res) {
+function getObject(req, res, name) {
   const answerArray = []
   const answers = separateAnswers(req, res)
   answers.map((cur) => {
@@ -24,13 +22,13 @@ function getObject(req, res) {
         break
       case 'MX':
         obj.preference = getPreference(cur.slice(20, 24))
-        obj.address = getMXAddress(cur.slice(24))
+        obj.address = getMXAddress(cur.slice(24)) + name
         break
       case 'AAAA':
         obj.address = getIPv6Address(cur.slice(20))
         break
       case 'NS':
-        obj.address = getNSAddress(cur.slice(20))
+        obj.address = getNSAddress(cur.slice(20)) + name
         break
       case 'CNAME':
         obj.address = getCnameAddress(cur.slice(20))
@@ -50,7 +48,7 @@ function getCnameAddress(res) {
 
 function getNSAddress(res) {
   const array = res.match(/.{2}/g)
-  return hexToString(array.join('')) + '.' + name
+  return hexToString(array.join('')) + '.'
 }
 
 function getPreference(res) {
@@ -59,7 +57,7 @@ function getPreference(res) {
 
 function getMXAddress(res) {
   const array = res.match(/.{2}/g)
-  return hexToString(array.join('')) + '.' + name
+  return hexToString(array.join('')) + '.'
 }
 
 function hexToString(hex) {
