@@ -17,12 +17,35 @@ function getObject(req, res, name) {
 function getHeaderObject(res, name) {
   let obj = {}
   obj.id = res.slice(0, 4)
-  obj.flags = ''
+  obj.flags = flagObject(res.slice(4, 8))
   obj.questions = getDecimalValue(res.slice(8, 12))
   obj.answerRRs = getDecimalValue(res.slice(12, 16))
   obj.authorityRRs = getDecimalValue(res.slice(16, 20))
   obj.additionalRRs = getDecimalValue(res.slice(20, 24))
   return obj
+}
+
+function flagObject(hex) {
+  let obj = {}
+  const bits = getBits(hex)
+  obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
+  obj.OPCODE = ''
+  obj.truncated = bits.slice(6, 7) === '1'
+  obj.recursionDesired = bits.slice(7, 8) === '1'
+  obj.recursionAvailable = bits.slice(8, 9) === '1'
+  obj.AnswerAuthenticated = bits.slice(10, 11) === '1'
+  obj.replyCode = bits.slice(12, 16)
+  return obj
+}
+
+function getBits(hex) {
+  const bits = hex.match(/.{1}/g).map((cur) => {
+    const value = parseInt(cur).toString(2)
+    if (value === '0') return '0000'
+    if (value === '1') return '0001'
+    return value
+  })
+  return bits.join('')
 }
 
 function getQueriesObject() {
