@@ -44,39 +44,27 @@ function stringToHex (string) {
 }
 
 function generateID () {
-  const string = '0123456789abcdef'
-  let id = ''
-  let i = 0
-  while (i < 4) {
-    id += string.charAt(Math.floor(Math.random() * string.length))
-    i += 1
-  }
-  return id
+  return 'dead'
 }
 
-function generateFlags () {
-  return '0100'
+function generateFlags (recursive) {
+  if (recursive === true) return '0100'
+  else return '0000'
 }
 
 function generateQuestionCount () {
-  return '0001'
+  return '0001' // default parameters
 }
 
-function answerRRs () {
-  return '0000'
-}
+const answerRRs = () => '0000'
 
-function authorityRRs () {
-  return '0000'
-}
+const authorityRRs = () => '0000'
 
-function additionalRRs () {
-  return '0000'
-}
+const additionalRRs = () => '0000'
 
-function formRequest (url, type) {
-  const header = generateID() + generateFlags() + generateQuestionCount() + answerRRs() + authorityRRs() + additionalRRs()
-  const query = makeQuery('google.com', 'a')
+function formRequest (url, type, recursive = true) {
+  const header = generateID() + generateFlags(recursive) + generateQuestionCount() + answerRRs() + authorityRRs() + additionalRRs()
+  const query = makeQuery(url, type)
   return header + query
 }
 

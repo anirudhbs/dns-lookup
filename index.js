@@ -1,18 +1,15 @@
 const dgram = require('dgram')
 const client = dgram.createSocket('udp4')
-const query = require('./src/query.js')
+const query = require('./src/query')
 
-const HOST = '8.8.8.8'
-const PORT = 53
-
-function sendQuery (buf) {
+function sendQuery (buf, HOST = '8.8.8.8', PORT = 53) {
   client.send(buf, PORT, HOST, (err) => {
     if (err) throw err
     console.log('sent request')
   })
 }
 
-client.on('message', (msg, cb) => {
+client.on('message', (msg) => {
   console.log('res', msg.toString('hex'))
   console.log(hexToString(msg.toString('hex')))
   closeIt()
@@ -32,7 +29,6 @@ function hexToString (hex) {
   return arr.join('')
 }
 
-const query1 = query.formRequest('google.com', 'a')
+const query1 = query.formRequest('google.com', 'a', true)
 const buf = Buffer.from(query1, 'hex')
-
 sendQuery(buf)
