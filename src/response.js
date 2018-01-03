@@ -6,6 +6,31 @@ function separateAnswers(req, res) {
 }
 
 function getObject(req, res, name) {
+  let obj = {}
+  obj.header = getHeaderObject(res, name)
+  obj.queries = getQueriesObject(res, name)
+  obj.answers = getAnswerObject(req, res, name)
+  console.log(obj)
+  return obj
+}
+
+function getHeaderObject(res, name) {
+  let obj = {}
+  obj.id = res.slice(0, 4)
+  obj.flags = ''
+  obj.questions = getDecimalValue(res.slice(8, 12))
+  obj.answerRRs = getDecimalValue(res.slice(12, 16))
+  obj.authorityRRs = getDecimalValue(res.slice(16, 20))
+  obj.additionalRRs = getDecimalValue(res.slice(20, 24))
+  return obj
+}
+
+function getQueriesObject() {
+  let obj = {}
+  return obj
+}
+
+function getAnswerObject(req, res, name) {
   const answerArray = []
   const answers = separateAnswers(req, res)
   answers.map((cur) => {
@@ -13,8 +38,8 @@ function getObject(req, res, name) {
     obj.name = name
     obj.type = getType(cur.slice(0, 4))
     obj.class = getClass()
-    obj.ttl = getTimeToLive(cur.slice(8, 16))
-    obj.length = getLength(cur.slice(16, 20))
+    obj.ttl = getDecimalValue(cur.slice(8, 16))
+    obj.length = getDecimalValue(cur.slice(16, 20))
 
     switch (obj.type) {
       case 'A':
@@ -33,7 +58,8 @@ function getObject(req, res, name) {
       case 'CNAME':
         obj.address = getCnameAddress(cur.slice(20))
         break
-      default: obj.address = null
+      default:
+        obj.address = null
     }
 
     answerArray.push(obj)
@@ -82,10 +108,12 @@ function getIPv4Address(res) {
   string.map((cur) => {
     address += parseInt(cur, 16) + '.'
   })
-  return address.slice(0, address.length-1)
+  return address.slice(0, address.length - 1)
 }
 
 const getClass = () => 'IN'
+
+const getDecimalValue = (res) => parseInt(res, 16)
 
 function getType(type) {
   switch (type) {
@@ -106,8 +134,7 @@ function getType(type) {
   }
 }
 
-const getTimeToLive = (res) => parseInt(res, 16)
-const getLength = (res) => parseInt(res, 16)
+getObject('ffff01000001000000000000077477697474657203636f6d0000010001', 'ffff81800001000200000000077477697474657203636f6d0000010001c00c0001000100000605000468f42a41c00c0001000100000605000468f42ac1', 'post.malone')
 
 module.exports = {
   getObject
