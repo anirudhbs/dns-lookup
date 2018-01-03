@@ -1,17 +1,15 @@
-const req = '7dd3010000010000000000000866616365626f6f6b03636f6d00001c0001'
-const res = '7dd3818000010001000000000866616365626f6f6b03636f6d00001c0001c00c001c00010000002400102a032880f10c0283faceb00c000025de'
 const name = 'PLACEHOLDERNAME'
 
-const answerCount = () => parseInt(res.slice(12, 16))
+const answerCount = (res) => parseInt(res.slice(12, 16))
 
-function separateAnswers() {
+function separateAnswers(req, res) {
   const answers = res.slice(req.length)
   return answers.split('c00c').filter((cur) => cur.length > 0)
 }
 
-function getObject() {
+function getObject(req, res) {
   const answerArray = []
-  const answers = separateAnswers()
+  const answers = separateAnswers(req, res)
   answers.map((cur) => {
     let obj = {}
     obj.name = name
@@ -19,6 +17,7 @@ function getObject() {
     obj.class = getClass()
     obj.ttl = getTimeToLive(cur.slice(8, 16))
     obj.length = getLength(cur.slice(16, 20))
+
     switch (obj.type) {
       case 'A':
         obj.address = getIPv4Address(cur.slice(20))
@@ -36,7 +35,9 @@ function getObject() {
       case 'CNAME':
         obj.address = getCnameAddress(cur.slice(20))
         break
+      default: obj.address = null
     }
+
     answerArray.push(obj)
   })
   return answerArray
@@ -83,7 +84,7 @@ function getIPv4Address(res) {
   string.map((cur) => {
     address += parseInt(cur, 16) + '.'
   })
-  return address.slice(-1)
+  return address.slice(0, address.length-1)
 }
 
 const getClass = () => 'IN'
@@ -110,4 +111,6 @@ function getType(type) {
 const getTimeToLive = (res) => parseInt(res, 16)
 const getLength = (res) => parseInt(res, 16)
 
-console.log(getObject())
+module.exports = {
+  getObject
+}
