@@ -43,18 +43,14 @@ function stringToHex (string) {
   return hex.join('')
 }
 
-function generateID () {
-  return 'dead'
-}
+const generateID = () => 'ffff'
 
 function generateFlags (recursive) {
   if (recursive === true) return '0100'
   else return '0000'
 }
 
-function generateQuestionCount () {
-  return '0001' // default parameters
-}
+const generateQuestionCount = (count = 1) => '000' + count
 
 const answerRRs = () => '0000'
 
