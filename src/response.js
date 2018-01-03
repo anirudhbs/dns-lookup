@@ -1,13 +1,12 @@
-const req = '8623010000010000000000000866616365626f6f6b03636f6d0000020001'
-const res = '8623818000010002000000000866616365626f6f6b03636f6d0000020001c00c00020001000053ba00070161026e73c00cc00c00020001000053ba00040162c02c'
+const req = '7dd3010000010000000000000866616365626f6f6b03636f6d00001c0001'
+const res = '7dd3818000010001000000000866616365626f6f6b03636f6d00001c0001c00c001c00010000002400102a032880f10c0283faceb00c000025de'
 const name = 'PLACEHOLDERNAME'
 
 const answerCount = () => parseInt(res.slice(12, 16))
 
 function separateAnswers() {
   const answers = res.slice(req.length)
-  const ans = answers.split('c00c').slice(1)
-  return ans.slice(0, ans.length - 1)
+  return answers.split('c00c').filter((cur) => cur.length > 0)
 }
 
 function getObject() {
@@ -31,10 +30,26 @@ function getObject() {
       case 'AAAA':
         obj.address = getIPv6Address(cur.slice(20))
         break
+      case 'NS':
+        obj.address = getNSAddress(cur.slice(20))
+        break
+      case 'CNAME':
+        obj.address = getCnameAddress(cur.slice(20))
+        break
     }
     answerArray.push(obj)
   })
   return answerArray
+}
+
+function getCnameAddress(res) {
+  let address = ''
+  return address
+}
+
+function getNSAddress(res) {
+  const array = res.match(/.{2}/g)
+  return hexToString(array.join('')) + '.' + name
 }
 
 function getPreference(res) {
@@ -56,7 +71,9 @@ function hexToString(hex) {
 }
 
 function getIPv6Address(res) {
-  let address = ''
+  let address
+  address = res.match(/.{4}/g).join(':')
+  address = address.replace(':0000:', ':0:')
   return address
 }
 
