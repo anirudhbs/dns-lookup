@@ -33,8 +33,25 @@ function flagObject(hex) {
   obj.recursionDesired = bits.slice(7, 8) === '1'
   obj.recursionAvailable = bits.slice(8, 9) === '1'
   obj.answerAuthenticated = bits.slice(10, 11) === '1'
-  obj.replyCode = bits.slice(12, 16)
+  obj.errors = getErrors(bits.slice(12, 16))
   return obj
+}
+
+function getErrors(res) {
+  switch (res) {
+    case '0001':
+      return 'format error'
+    case '0002':
+      return 'server failure'
+    case '0003':
+      return 'name error'
+    case '0004':
+      return 'not implemented'
+    case '0005':
+      return 'refused'
+    default:
+      return null
+  }
 }
 
 function queryType(res) {
@@ -110,10 +127,10 @@ function getCnameAddress(res) {
   return address
 }
 
-// function getNSAddress(res) {
-//   const array = res.match(/.{2}/g)
-//   return hexToString(array.join(''))
-// }
+function getMXAddress(res) {
+  const array = res.match(/.{2}/g)
+  return hexToString(array.join(''))
+}
 
 function getPreference(res) {
   return parseInt(res, 16)
@@ -130,7 +147,7 @@ function getNSAddress(complete, res, name) { // mx
       address += newHexToString(array[i])
     }
   }
-  if(address.endsWith('com.')) return address.slice(1) + '.' + name
+  if (address.endsWith('com.')) return address.slice(1) + '.' + name
   return address.slice(1)
 }
 
