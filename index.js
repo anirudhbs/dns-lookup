@@ -29,8 +29,8 @@ function hexToString(hex) {
   return arr.join('')
 }
 
-const domain = 'google.co.in'
-const type = 'a'
+const domain = 'reddit.com'
+const type = 'mx'
 const query1 = query.formRequest(domain, type, true)
 const buf = Buffer.from(query1, 'hex')
 sendQuery(buf)

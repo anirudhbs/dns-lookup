@@ -33,11 +33,10 @@ function flagObject(hex) {
   obj.truncated = bits.slice(6, 7) === '1'
   obj.recursionDesired = bits.slice(7, 8) === '1'
   obj.recursionAvailable = bits.slice(8, 9) === '1'
-  obj.AnswerAuthenticated = bits.slice(10, 11) === '1'
+  obj.answerAuthenticated = bits.slice(10, 11) === '1'
   obj.replyCode = bits.slice(12, 16)
   return obj
 }
-
 
 function queryType(res) {
   switch (res) {
@@ -67,7 +66,7 @@ function getQueriesObject(res) {
   obj.length = obj.name.length - 1
   obj.labelCount = obj.name.match(/\./g).length
   obj.type = getType(res.slice(-8, -4))
-  obj.class = getClass()
+  obj.class = getClass(res.slice(-4))
   return obj
 }
 
@@ -152,7 +151,20 @@ function getIPv4Address(res) {
   return address.slice(0, address.length - 1)
 }
 
-const getClass = () => 'IN'
+function getClass(res) {
+  switch (res) {
+    case '0001':
+      return 'IN'
+    case '0002':
+      return 'CS'
+    case '0003':
+      return 'CH'
+    case '0004':
+      return 'HS'
+    default:
+      return undefined
+  }
+}
 
 const getDecimalValue = (res) => parseInt(res, 16)
 
