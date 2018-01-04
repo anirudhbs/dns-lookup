@@ -5,23 +5,22 @@ function separateAnswers(req, res) {
   return answers.split('c00c').filter((cur) => cur.length > 0)
 }
 
-function getObject(req, res, name) {
+function getObject(req, res) {
   let obj = {}
-  obj.header = getHeaderObject(res, name)
-  obj.queries = getQueriesObject(res.slice(24, res.indexOf('c00c')), name)
-  obj.answers = getAnswerObject(req, res, name)
-  // console.log(JSON.stringify(obj, null, 1))
+  obj.header = getHeaderObject(res.slice(0, 24))
+  obj.queries = getQueriesObject(res.slice(24, res.indexOf('c00c')))
+  obj.answers = getAnswerObject(req, res, obj.queries.name)
   return obj
 }
 
-function getHeaderObject(res, name) {
+function getHeaderObject(res) {
   let obj = {}
   obj.transactionID = res.slice(0, 4)
   obj.flags = flagObject(res.slice(4, 8))
   obj.questions = getDecimalValue(res.slice(8, 12))
   obj.answerRRs = getDecimalValue(res.slice(12, 16))
   obj.authorityRRs = getDecimalValue(res.slice(16, 20))
-  obj.additionalRRs = getDecimalValue(res.slice(20, 24))
+  obj.additionalRRs = getDecimalValue(res.slice(20))
   return obj
 }
 
@@ -87,13 +86,13 @@ function getAnswerObject(req, res, name) {
         break
       case 'MX':
         obj.preference = getPreference(cur.slice(20, 24))
-        obj.address = getMXAddress(cur.slice(24)) + name
+        obj.address = getMXAddress(cur.slice(24)) // + name
         break
       case 'AAAA':
         obj.address = getIPv6Address(cur.slice(20))
         break
       case 'NS':
-        obj.address = getNSAddress(cur.slice(20)) + name
+        obj.address = getNSAddress(res, cur.slice(20)) // + name
         break
       case 'CNAME':
         obj.address = getCnameAddress(cur.slice(20))
@@ -101,7 +100,6 @@ function getAnswerObject(req, res, name) {
       default:
         obj.address = null
     }
-
     answerArray.push(obj)
   })
   return answerArray
@@ -112,18 +110,58 @@ function getCnameAddress(res) {
   return address
 }
 
-function getNSAddress(res) {
-  const array = res.match(/.{2}/g)
-  return hexToString(array.join('')) + '.'
-}
+// function getNSAddress(res) {
+//   const array = res.match(/.{2}/g)
+//   return hexToString(array.join(''))
+// }
 
 function getPreference(res) {
   return parseInt(res, 16)
 }
 
-function getMXAddress(res) {
+function getNSAddress(complete, res) { // mx
   const array = res.match(/.{2}/g)
-  return hexToString(array.join('')) + '.'
+  let address = ''
+  for (let i = 0; i < array.length; i++) {
+    if (array[i].startsWith('c')) {
+      address += getFromPointer(complete, array[i] + array[i + 1])
+      i += 2
+    } else {
+      const s = newHexToString(array[i])
+      address += s
+    }
+  }
+  return address
+}
+
+function getFromPointer(res, offset) {
+  const array = res.match(/.{2}/g)
+  const numOffset = getOffset(offset)
+  const newArray = array.slice(numOffset)
+  return '.' + hexToString(newArray.slice(0, newArray.indexOf('00')).join(''))
+}
+
+function getOffset(hex) {
+  const array = hex.match(/.{1}/g)
+  const newArray = array.map((cur) => {
+    const value = parseInt(cur, 16).toString(2)
+    if (value.length === 4) return value
+    switch (value.length) {
+      case 1:
+        return '000' + value
+      case 2:
+        return '00' + value
+      case 3:
+        return '0' + value
+    }
+  })
+  const string = newArray.join('').slice(2)
+  return parseInt(string, 2)
+}
+
+function newHexToString(hex) {
+  if (parseInt(hex, 16) < 20) return '.'
+  return (String.fromCharCode(parseInt(hex, 16)))
 }
 
 function hexToString(hex) {
@@ -186,8 +224,6 @@ function getType(type) {
       return 'A'
   }
 }
-
-// getObject('ffff01000001000000000000077477697474657203636f6d0000010001', 'ffff81800001000200000000077477697474657203636f6d0000010001c00c0001000100000605000468f42a41c00c0001000100000605000468f42ac1', 'placeholder')
 
 module.exports = {
   getObject

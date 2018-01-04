@@ -11,7 +11,8 @@ function sendQuery(buf, HOST = '8.8.8.8', PORT = 53) {
 }
 
 client.on('message', (msg) => {
-  console.log(JSON.stringify(response.getObject(query1, msg.toString('hex'), domain), null, 2))
+  const responseObject = response.getObject(query1, msg.toString('hex'))
+  printResponse(responseObject)
   closeIt()
 })
 
@@ -21,16 +22,16 @@ function closeIt() {
   })
 }
 
-function hexToString(hex) {
-  const arr = []
-  hex.match(/.{2}/g).map((cur) => {
-    arr.push(String.fromCharCode(parseInt(cur, 16)))
-  })
-  return arr.join('')
+let query1
+
+function lookup(domain, type, recursive) {
+  query1 = query.formRequest(domain, type, true)
+  const buf = Buffer.from(query1, 'hex')
+  sendQuery(buf)
 }
 
-const domain = 'reddit.com'
-const type = 'mx'
-const query1 = query.formRequest(domain, type, true)
-const buf = Buffer.from(query1, 'hex')
-sendQuery(buf)
+function printResponse(res) {
+  console.log(JSON.stringify(res, null, 2))
+}
+
+lookup('google.com', 'ns', true)
