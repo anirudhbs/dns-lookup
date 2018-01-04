@@ -149,7 +149,7 @@ function getOffset(hex) {
 function getIPv6Address(res) {
   let address
   address = res.match(/.{4}/g).join(':')
-  address = address.replace(':0000:', ':0:')
+  address = address.replace(':0', ':')
   return address
 }
 
