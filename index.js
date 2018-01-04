@@ -34,4 +34,4 @@ function printResponse(res) {
   console.log(JSON.stringify(res, null, 2))
 }
 
-lookup('google.com', 'ns', true)
+lookup('geekskool.com', 'ns', true)

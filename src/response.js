@@ -92,7 +92,7 @@ function getAnswerObject(req, res, name) {
         obj.address = getIPv6Address(cur.slice(20))
         break
       case 'NS':
-        obj.address = getNSAddress(res, cur.slice(20)) // + name
+        obj.address = getNSAddress(res, cur.slice(20), name) // + name
         break
       case 'CNAME':
         obj.address = getCnameAddress(cur.slice(20))
@@ -119,7 +119,7 @@ function getPreference(res) {
   return parseInt(res, 16)
 }
 
-function getNSAddress(complete, res) { // mx
+function getNSAddress(complete, res, name) { // mx
   const array = res.match(/.{2}/g)
   let address = ''
   for (let i = 0; i < array.length; i++) {
@@ -127,11 +127,11 @@ function getNSAddress(complete, res) { // mx
       address += getFromPointer(complete, array[i] + array[i + 1])
       i += 2
     } else {
-      const s = newHexToString(array[i])
-      address += s
+      address += newHexToString(array[i])
     }
   }
-  return address
+  if(address.endsWith('com.')) return address.slice(1) + '.' + name
+  return address.slice(1)
 }
 
 function getFromPointer(res, offset) {
