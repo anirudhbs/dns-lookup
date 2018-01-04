@@ -6,7 +6,7 @@ function separateAnswers(req, res) {
 }
 
 function getObject(req, res) {
-  let obj = {}
+  const obj = {}
   obj.header = getHeaderObject(res.slice(0, 24))
   obj.queries = getQueriesObject(res.slice(24, res.indexOf('c00c')))
   obj.answers = getAnswerObject(req, res, obj.queries.name)
@@ -14,7 +14,7 @@ function getObject(req, res) {
 }
 
 function getHeaderObject(res) {
-  let obj = {}
+  const obj = {}
   obj.transactionID = res.slice(0, 4)
   obj.flags = flagObject(res.slice(4, 8))
   obj.questions = helper.getDecimalValue(res.slice(8, 12))
@@ -25,7 +25,7 @@ function getHeaderObject(res) {
 }
 
 function flagObject(hex) {
-  let obj = {}
+  const obj = {}
   const bits = getBits(hex)
   obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
   obj.queryType = helper.getQueryType(bits.slice(1, 5))
@@ -47,7 +47,7 @@ function getBits(hex) {
 }
 
 function getQueriesObject(res) {
-  let obj = {}
+  const obj = {}
   obj.name = helper.hexToString(res.slice(0, res.length - 8))
   obj.length = obj.name.length - 1
   obj.labelCount = obj.name.match(/\./g).length
@@ -60,7 +60,7 @@ function getAnswerObject(req, res, name) {
   const answerArray = []
   const answers = separateAnswers(req, res)
   answers.map((cur) => {
-    let obj = {}
+    const obj = {}
     obj.name = name
     obj.type = helper.getType(cur.slice(0, 4))
     obj.class = helper.getClass()
@@ -79,10 +79,13 @@ function getAnswerObject(req, res, name) {
         obj.address = getIPv6Address(cur.slice(20))
         break
       case 'NS':
-        obj.address = getNSAddress(res, cur.slice(20), name) // + name
+        obj.address = getNSAddress(res, cur.slice(20), name)
         break
       case 'CNAME':
         obj.address = getCnameAddress(cur.slice(20))
+        break
+      case 'TXT':
+        obj.address = getTxtAddress(cur.slice(20))
         break
       default:
         obj.address = null
@@ -91,6 +94,8 @@ function getAnswerObject(req, res, name) {
   })
   return answerArray
 }
+
+const getTxtAddress = res => helper.hexToString(res)
 
 function getCnameAddress(res) {
   let address = ''
@@ -117,7 +122,7 @@ function getNSAddress(complete, res, name) { // mx
       address += helper.individualHexToString(array[i])
     }
   }
-  if (address.endsWith('com.')) return address.slice(1) + '.' + name
+  if (!address.endsWith('com.')) return address.slice(1) + '.' + name
   return address.slice(1)
 }
 
