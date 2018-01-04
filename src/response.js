@@ -1,4 +1,4 @@
-const answerCount = (res) => parseInt(res.slice(12, 16))
+const helper = require('./helper')
 
 function separateAnswers(req, res) {
   const answers = res.slice(req.length)
@@ -17,10 +17,10 @@ function getHeaderObject(res) {
   let obj = {}
   obj.transactionID = res.slice(0, 4)
   obj.flags = flagObject(res.slice(4, 8))
-  obj.questions = getDecimalValue(res.slice(8, 12))
-  obj.answerRRs = getDecimalValue(res.slice(12, 16))
-  obj.authorityRRs = getDecimalValue(res.slice(16, 20))
-  obj.additionalRRs = getDecimalValue(res.slice(20))
+  obj.questions = helper.getDecimalValue(res.slice(8, 12))
+  obj.answerRRs = helper.getDecimalValue(res.slice(12, 16))
+  obj.authorityRRs = helper.getDecimalValue(res.slice(16, 20))
+  obj.additionalRRs = helper.getDecimalValue(res.slice(20))
   return obj
 }
 
@@ -28,43 +28,13 @@ function flagObject(hex) {
   let obj = {}
   const bits = getBits(hex)
   obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
-  obj.queryType = queryType(bits.slice(1, 5))
+  obj.queryType = helper.getQueryType(bits.slice(1, 5))
   obj.truncated = bits.slice(6, 7) === '1'
   obj.recursionDesired = bits.slice(7, 8) === '1'
   obj.recursionAvailable = bits.slice(8, 9) === '1'
   obj.answerAuthenticated = bits.slice(10, 11) === '1'
-  obj.errors = getErrors(bits.slice(12, 16))
+  obj.errors = helper.getErrors(bits.slice(12, 16))
   return obj
-}
-
-function getErrors(res) {
-  switch (res) {
-    case '0001':
-      return 'format error'
-    case '0002':
-      return 'server failure'
-    case '0003':
-      return 'name error'
-    case '0004':
-      return 'not implemented'
-    case '0005':
-      return 'refused'
-    default:
-      return null
-  }
-}
-
-function queryType(res) {
-  switch (res) {
-    case '0000':
-      return 'standard'
-    case '0001':
-      return 'inverse'
-    case '0010':
-      return 'server status'
-    default:
-      return undefined
-  }
 }
 
 function getBits(hex) {
@@ -78,11 +48,11 @@ function getBits(hex) {
 
 function getQueriesObject(res) {
   let obj = {}
-  obj.name = hexToString(res.slice(0, res.length - 8))
+  obj.name = helper.hexToString(res.slice(0, res.length - 8))
   obj.length = obj.name.length - 1
   obj.labelCount = obj.name.match(/\./g).length
-  obj.type = getType(res.slice(-8, -4))
-  obj.class = getClass(res.slice(-4))
+  obj.type = helper.getType(res.slice(-8, -4))
+  obj.class = helper.getClass(res.slice(-4))
   return obj
 }
 
@@ -92,10 +62,10 @@ function getAnswerObject(req, res, name) {
   answers.map((cur) => {
     let obj = {}
     obj.name = name
-    obj.type = getType(cur.slice(0, 4))
-    obj.class = getClass()
-    obj.ttl = getDecimalValue(cur.slice(8, 16))
-    obj.length = getDecimalValue(cur.slice(16, 20))
+    obj.type = helper.getType(cur.slice(0, 4))
+    obj.class = helper.getClass()
+    obj.ttl = helper.getDecimalValue(cur.slice(8, 16))
+    obj.length = helper.getDecimalValue(cur.slice(16, 20))
 
     switch (obj.type) {
       case 'A':
@@ -129,7 +99,7 @@ function getCnameAddress(res) {
 
 function getMXAddress(res) {
   const array = res.match(/.{2}/g)
-  return hexToString(array.join(''))
+  return helper.hexToString(array.join(''))
 }
 
 function getPreference(res) {
@@ -144,7 +114,7 @@ function getNSAddress(complete, res, name) { // mx
       address += getFromPointer(complete, array[i] + array[i + 1])
       i += 2
     } else {
-      address += newHexToString(array[i])
+      address += helper.individualHexToString(array[i])
     }
   }
   if (address.endsWith('com.')) return address.slice(1) + '.' + name
@@ -155,7 +125,7 @@ function getFromPointer(res, offset) {
   const array = res.match(/.{2}/g)
   const numOffset = getOffset(offset)
   const newArray = array.slice(numOffset)
-  return '.' + hexToString(newArray.slice(0, newArray.indexOf('00')).join(''))
+  return '.' + helper.hexToString(newArray.slice(0, newArray.indexOf('00')).join(''))
 }
 
 function getOffset(hex) {
@@ -176,20 +146,6 @@ function getOffset(hex) {
   return parseInt(string, 2)
 }
 
-function newHexToString(hex) {
-  if (parseInt(hex, 16) < 20) return '.'
-  return (String.fromCharCode(parseInt(hex, 16)))
-}
-
-function hexToString(hex) {
-  const arr = []
-  hex.match(/.{2}/g).map((cur) => {
-    if (parseInt(cur, 16) < 20) arr.push('.')
-    else arr.push(String.fromCharCode(parseInt(cur, 16)))
-  })
-  return arr.join('').slice(1)
-}
-
 function getIPv6Address(res) {
   let address
   address = res.match(/.{4}/g).join(':')
@@ -204,42 +160,6 @@ function getIPv4Address(res) {
     address += parseInt(cur, 16) + '.'
   })
   return address.slice(0, address.length - 1)
-}
-
-function getClass(res) {
-  switch (res) {
-    case '0001':
-      return 'IN'
-    case '0002':
-      return 'CS'
-    case '0003':
-      return 'CH'
-    case '0004':
-      return 'HS'
-    default:
-      return undefined
-  }
-}
-
-const getDecimalValue = (res) => parseInt(res, 16)
-
-function getType(type) {
-  switch (type) {
-    case '0002':
-      return 'NS'
-    case '0006':
-      return 'S0A'
-    case '0005':
-      return 'CNAME'
-    case '000f':
-      return 'MX'
-    case '0010':
-      return 'TXT'
-    case '001c':
-      return 'AAAA'
-    default:
-      return 'A'
-  }
 }
 
 module.exports = {
