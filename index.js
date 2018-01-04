@@ -11,7 +11,7 @@ function sendQuery(buf, HOST = '8.8.8.8', PORT = 53) {
 }
 
 client.on('message', (msg) => {
-  console.log(response.getObject(query1, msg.toString('hex'), domain))
+  console.log(JSON.stringify(response.getObject(query1, msg.toString('hex'), domain), null, 2))
   closeIt()
 })
 
@@ -29,7 +29,7 @@ function hexToString(hex) {
   return arr.join('')
 }
 
-const domain = 'twitter.com'
+const domain = 'google.co.in'
 const type = 'a'
 const query1 = query.formRequest(domain, type, true)
 const buf = Buffer.from(query1, 'hex')

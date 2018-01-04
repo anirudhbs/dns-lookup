@@ -10,13 +10,13 @@ function getObject(req, res, name) {
   obj.header = getHeaderObject(res, name)
   obj.queries = getQueriesObject(res.slice(24, res.indexOf('c00c')), name)
   obj.answers = getAnswerObject(req, res, name)
-  // console.log(obj)
+  // console.log(JSON.stringify(obj, null, 1))
   return obj
 }
 
 function getHeaderObject(res, name) {
   let obj = {}
-  obj.id = res.slice(0, 4)
+  obj.transactionID = res.slice(0, 4)
   obj.flags = flagObject(res.slice(4, 8))
   obj.questions = getDecimalValue(res.slice(8, 12))
   obj.answerRRs = getDecimalValue(res.slice(12, 16))
@@ -29,7 +29,7 @@ function flagObject(hex) {
   let obj = {}
   const bits = getBits(hex)
   obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
-  obj.OPCODE = bits.slice(1, 5)
+  obj.queryType = queryType(bits.slice(1, 5))
   obj.truncated = bits.slice(6, 7) === '1'
   obj.recursionDesired = bits.slice(7, 8) === '1'
   obj.recursionAvailable = bits.slice(8, 9) === '1'
@@ -38,11 +38,24 @@ function flagObject(hex) {
   return obj
 }
 
+
+function queryType(res) {
+  switch (res) {
+    case '0000':
+      return 'standard'
+    case '0001':
+      return 'inverse'
+    case '0010':
+      return 'server status'
+    default:
+      return undefined
+  }
+}
+
 function getBits(hex) {
   const bits = hex.match(/.{1}/g).map((cur) => {
     const value = parseInt(cur).toString(2)
-    if (value === '0') return '0000'
-    if (value === '1') return '0001'
+    if (value.length === 1) return '000' + value
     return value
   })
   return bits.join('')
@@ -54,7 +67,7 @@ function getQueriesObject(res) {
   obj.length = obj.name.length - 1
   obj.labelCount = obj.name.match(/\./g).length
   obj.type = getType(res.slice(-8, -4))
-  obj.class = 'IN'
+  obj.class = getClass()
   return obj
 }
 
