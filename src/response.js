@@ -8,9 +8,9 @@ function separateAnswers(req, res) {
 function getObject(req, res, name) {
   let obj = {}
   obj.header = getHeaderObject(res, name)
-  obj.queries = getQueriesObject(res, name)
+  obj.queries = getQueriesObject(res.slice(24, res.indexOf('c00c')), name)
   obj.answers = getAnswerObject(req, res, name)
-  console.log(obj)
+  // console.log(obj)
   return obj
 }
 
@@ -29,7 +29,7 @@ function flagObject(hex) {
   let obj = {}
   const bits = getBits(hex)
   obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
-  obj.OPCODE = ''
+  obj.OPCODE = bits.slice(1, 5)
   obj.truncated = bits.slice(6, 7) === '1'
   obj.recursionDesired = bits.slice(7, 8) === '1'
   obj.recursionAvailable = bits.slice(8, 9) === '1'
@@ -48,8 +48,13 @@ function getBits(hex) {
   return bits.join('')
 }
 
-function getQueriesObject() {
+function getQueriesObject(res) {
   let obj = {}
+  obj.name = hexToString(res.slice(0, res.length - 8))
+  obj.length = obj.name.length - 1
+  obj.labelCount = obj.name.match(/\./g).length
+  obj.type = getType(res.slice(-8, -4))
+  obj.class = 'IN'
   return obj
 }
 
@@ -157,7 +162,7 @@ function getType(type) {
   }
 }
 
-getObject('ffff01000001000000000000077477697474657203636f6d0000010001', 'ffff81800001000200000000077477697474657203636f6d0000010001c00c0001000100000605000468f42a41c00c0001000100000605000468f42ac1', 'post.malone')
+// getObject('ffff01000001000000000000077477697474657203636f6d0000010001', 'ffff81800001000200000000077477697474657203636f6d0000010001c00c0001000100000605000468f42a41c00c0001000100000605000468f42ac1', 'placeholder')
 
 module.exports = {
   getObject
