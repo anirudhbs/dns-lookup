@@ -17,18 +17,16 @@ function getHex (h) {
 
 function getType (type) {
   switch (type) {
-    case 'ns':
-      return '0002'
-    case 'soa':
-      return '0006'
-    case 'cname':
-      return '0005'
-    case 'mx':
-      return '000f'
-    case 'txt':
-      return '0010'
     case 'aaaa':
       return '001c'
+    case 'mx':
+      return '000f'
+    case 'ns':
+      return '0002'
+    case 'cname':
+      return '0005'
+    case 'txt':
+      return '0010'
     default:
       return '0001'
   }

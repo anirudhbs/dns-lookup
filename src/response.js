@@ -63,7 +63,7 @@ function getAnswerObject(req, res, name) {
     const obj = {}
     obj.name = name
     obj.type = helper.getType(cur.slice(0, 4))
-    obj.class = helper.getClass()
+    obj.class = helper.getClass(cur.slice(4, 8))
     obj.ttl = helper.getDecimalValue(cur.slice(8, 16))
     obj.length = helper.getDecimalValue(cur.slice(16, 20))
 
@@ -73,7 +73,7 @@ function getAnswerObject(req, res, name) {
         break
       case 'MX':
         obj.preference = getPreference(cur.slice(20, 24))
-        obj.address = getMXAddress(cur.slice(24)) // + name
+        obj.address = getMXAddress(res, cur.slice(24), name)
         break
       case 'AAAA':
         obj.address = getIPv6Address(cur.slice(20))
@@ -102,16 +102,7 @@ function getCnameAddress(res) {
   return address
 }
 
-function getMXAddress(res) {
-  const array = res.match(/.{2}/g)
-  return helper.hexToString(array.join(''))
-}
-
-function getPreference(res) {
-  return parseInt(res, 16)
-}
-
-function getNSAddress(complete, res, name) { // mx
+function getMXAddress(complete, res, name) {
   const array = res.match(/.{2}/g)
   let address = ''
   for (let i = 0; i < array.length; i++) {
@@ -126,11 +117,17 @@ function getNSAddress(complete, res, name) { // mx
   return address.slice(1)
 }
 
+const getPreference = res => parseInt(res, 16)
+
+const getNSAddress = (complete, res, name) => getMXAddress(complete, res, name)
+
 function getFromPointer(res, offset) {
   const array = res.match(/.{2}/g)
   const numOffset = getOffset(offset)
   const newArray = array.slice(numOffset)
-  return '.' + helper.hexToString(newArray.slice(0, newArray.indexOf('00')).join(''))
+  const temp = newArray.slice(0, newArray.indexOf('00')).join('')
+  if (temp[temp.length - 4] === 'c') return getFromPointer(res, temp.slice(-4))
+  return '.' + helper.hexToString(temp)
 }
 
 function getOffset(hex) {
