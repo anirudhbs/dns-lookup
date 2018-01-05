@@ -1,11 +1,11 @@
 const helper = require('./helper')
 
-function separateAnswers(req, res) {
+function separateAnswers (req, res) {
   const answers = res.slice(req.length)
   return answers.split('c00c').filter((cur) => cur.length > 0)
 }
 
-function getObject(req, res) {
+function getObject (req, res) {
   const obj = {}
   obj.header = getHeaderObject(res.slice(0, 24))
   obj.queries = getQueriesObject(res.slice(24, res.indexOf('c00c')))
@@ -13,7 +13,7 @@ function getObject(req, res) {
   return obj
 }
 
-function getHeaderObject(res) {
+function getHeaderObject (res) {
   const obj = {}
   obj.transactionID = res.slice(0, 4)
   obj.flags = flagObject(res.slice(4, 8))
@@ -24,7 +24,7 @@ function getHeaderObject(res) {
   return obj
 }
 
-function flagObject(hex) {
+function flagObject (hex) {
   const obj = {}
   const bits = getBits(hex)
   obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
@@ -37,7 +37,7 @@ function flagObject(hex) {
   return obj
 }
 
-function getBits(hex) {
+function getBits (hex) {
   const bits = hex.match(/.{1}/g).map((cur) => {
     const value = parseInt(cur).toString(2)
     if (value.length === 1) return '000' + value
@@ -46,7 +46,7 @@ function getBits(hex) {
   return bits.join('')
 }
 
-function getQueriesObject(res) {
+function getQueriesObject (res) {
   const obj = {}
   obj.name = helper.hexToString(res.slice(0, res.length - 8))
   obj.length = obj.name.length - 1
@@ -56,7 +56,7 @@ function getQueriesObject(res) {
   return obj
 }
 
-function getAnswerObject(req, res, name) {
+function getAnswerObject (req, res, name) {
   const answerArray = []
   const answers = separateAnswers(req, res)
   answers.map((cur) => {
@@ -97,12 +97,12 @@ function getAnswerObject(req, res, name) {
 
 const getTxtAddress = res => helper.hexToString(res)
 
-function getCnameAddress(res) {
+function getCnameAddress (res) {
   let address = ''
   return address
 }
 
-function getMXAddress(complete, res, name) {
+function getMXAddress (complete, res, name) {
   const array = res.match(/.{2}/g)
   let address = ''
   for (let i = 0; i < array.length; i++) {
@@ -121,7 +121,7 @@ const getPreference = res => parseInt(res, 16)
 
 const getNSAddress = (complete, res, name) => getMXAddress(complete, res, name)
 
-function getFromPointer(res, offset) {
+function getFromPointer (res, offset) {
   const array = res.match(/.{2}/g)
   const numOffset = getOffset(offset)
   const newArray = array.slice(numOffset)
@@ -130,7 +130,7 @@ function getFromPointer(res, offset) {
   return '.' + helper.hexToString(temp)
 }
 
-function getOffset(hex) {
+function getOffset (hex) {
   const array = hex.match(/.{1}/g)
   const newArray = array.map((cur) => {
     const value = parseInt(cur, 16).toString(2)
@@ -148,13 +148,13 @@ function getOffset(hex) {
   return parseInt(string, 2)
 }
 
-function getIPv6Address(res) {
+function getIPv6Address (res) {
   let address
   address = res.match(/.{4}/g).join(':')
   return address
 }
 
-function getIPv4Address(res) {
+function getIPv4Address (res) {
   const string = res.match(/.{2}/g)
   let address = ''
   string.map((cur) => {

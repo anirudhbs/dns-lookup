@@ -3,15 +3,15 @@ const client = dgram.createSocket('udp4')
 const response = require('./response')
 
 function sendQuery(buf, HOST = '8.8.8.8', cb) {
-  let query
+  const query = {}
   client.send(buf, 53, HOST, (err) => {
     if (err) throw err
     console.log('sent request')
-    query = buf.toString('hex')
+    query.data = buf.toString('hex')
   })
 
   client.on('message', (msg) => {
-    const responseObject = response.getObject(query, msg.toString('hex'))
+    const responseObject = response.getObject(query.data, msg.toString('hex'))
     client.close(() => {
       console.log('closed socket')
     })

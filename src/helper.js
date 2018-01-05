@@ -1,6 +1,6 @@
 const getDecimalValue = (res) => parseInt(res, 16)
 
-function getClass(res) {
+function getClass (res) {
   switch (res) {
     case '0001':
       return 'IN'
@@ -15,7 +15,7 @@ function getClass(res) {
   }
 }
 
-function getType(type) {
+function getType (type) {
   switch (type) {
     case '0002':
       return 'NS'
@@ -34,7 +34,7 @@ function getType(type) {
   }
 }
 
-function getErrors(res) {
+function getErrors (res) {
   switch (res) {
     case '0001':
       return 'format error'
@@ -51,7 +51,7 @@ function getErrors(res) {
   }
 }
 
-function getQueryType(res) {
+function getQueryType (res) {
   switch (res) {
     case '0000':
       return 'standard'
@@ -64,12 +64,12 @@ function getQueryType(res) {
   }
 }
 
-function individualHexToString(hex) {
+function individualHexToString (hex) {
   if (parseInt(hex, 16) < 20) return '.'
   return (String.fromCharCode(parseInt(hex, 16)))
 }
 
-function hexToString(hex) {
+function hexToString (hex) {
   const arr = []
   hex.match(/.{2}/g).map((cur) => {
     if (parseInt(cur, 16) < 20) arr.push('.')
