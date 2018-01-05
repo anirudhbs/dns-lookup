@@ -1,3 +1,5 @@
+const helper = require('./helper')
+
 function makeQuery (url, queryType) {
   const splitUp = url.split('.')
   const hexString = []
@@ -6,31 +8,12 @@ function makeQuery (url, queryType) {
     hexString.push(stringToHex(cur))
   })
   hexString.push('00') // last . in url
-  hexString.push(getType(queryType)) // type
+  hexString.push(helper.setType(queryType)) // type
   hexString.push('0001') // class
   return hexString.join('')
 }
 
-function getHex (h) {
-  return (h.length === 1) ? '0' + h : h
-}
-
-function getType (type) {
-  switch (type) {
-    case 'aaaa':
-      return '001c'
-    case 'mx':
-      return '000f'
-    case 'ns':
-      return '0002'
-    case 'cname':
-      return '0005'
-    case 'txt':
-      return '0010'
-    default:
-      return '0001'
-  }
-}
+const getHex = h => (h.length === 1) ? '0' + h : h
 
 function stringToHex (string) {
   const hex = []
@@ -43,10 +26,7 @@ function stringToHex (string) {
 
 const generateID = () => 'ffff'
 
-function generateFlags (recursive) {
-  if (recursive === true) return '0100'
-  else return '0000'
-}
+const generateFlags = recursive => (recursive === true) ? '0100' : '0000'
 
 const generateQuestionCount = (count = 1) => '000' + count
 

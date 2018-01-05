@@ -34,6 +34,23 @@ function getType (type) {
   }
 }
 
+function setType (type) {
+  switch (type) {
+    case 'aaaa':
+      return '001c'
+    case 'mx':
+      return '000f'
+    case 'ns':
+      return '0002'
+    case 'cname':
+      return '0005'
+    case 'txt':
+      return '0010'
+    default:
+      return '0001'
+  }
+}
+
 function getErrors (res) {
   switch (res) {
     case '0001':
@@ -82,6 +99,7 @@ module.exports = {
   getDecimalValue,
   getClass,
   getType,
+  setType,
   getErrors,
   getQueryType,
   hexToString,
