@@ -7,14 +7,12 @@ function sendQuery (buf, HOST = '8.8.8.8', cb) {
 
   client.send(buf, 53, HOST, (err) => {
     if (err) throw err
-    console.log('sent request')
     query.data = buf.toString('hex')
   })
 
   client.on('message', (msg) => {
     const responseObject = response.getObject(query.data, msg.toString('hex'))
     client.close(() => {
-      console.log('closed socket')
     })
     cb(null, responseObject)
   })

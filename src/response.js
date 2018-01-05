@@ -85,10 +85,10 @@ function getAddress (cur, type, res) {
       return getIPv6Address(cur.slice(20))
     case 'NS':
       return getNSAddress(cur.slice(24), res)
-    case 'CNAME':
-      return getCnameAddress(cur.slice(20))
     case 'TXT':
       return getTxtAddress(cur.slice(20))
+    case 'SOA':
+      return getSoaAddress(cur.slice(20), res)
     default:
       return null
   }
@@ -96,11 +96,11 @@ function getAddress (cur, type, res) {
 
 function getIPv4Address (res) {
   const string = res.match(/.{2}/g)
-  let address = ''
+  const address = []
   string.map((cur) => {
-    address += parseInt(cur, 16) + '.'
+    address.push(parseInt(cur, 16))
   })
-  return address.slice(0, address.length - 1)
+  return address.join('.')
 }
 
 function getIPv6Address (res) {
@@ -111,11 +111,6 @@ function getIPv6Address (res) {
 
 const getTxtAddress = res => helper.hexToString(res)
 
-function getCnameAddress (res) {
-  let address = ''
-  return address
-}
-
 const getPreference = res => parseInt(res, 16)
 
 function getMXAddress (res, complete) {
@@ -123,13 +118,16 @@ function getMXAddress (res, complete) {
   let address = ''
   for (let i = 0; i < array.length; i++) {
     if (array[i].startsWith('c')) {
-      address += getFromPointer(complete, array[i] + array[i + 1])
+      address += getFromPointer(complete, getOffset(array[i] + array[i + 1]))
       i += 2
     } else {
       address += helper.individualHexToString(array[i])
     }
   }
-  if (!(address.endsWith('com.') || address.endsWith('com'))) return address.slice(1) + '.' + getFromPointer(complete, 'c00c')
+  if (address.endsWith('org.') || address.endsWith('uk.') || address.endsWith('net.')) return address.slice(1)
+  if (!(address.endsWith('com.') || address.endsWith('com'))) {
+    return address.slice(1) + '.' + getFromPointer(complete, getOffset('c00c'))
+  }
   return address.slice(1)
 }
 
@@ -137,10 +135,11 @@ const getNSAddress = (res, complete) => 'ns' + getMXAddress(res, complete)
 
 function getFromPointer (res, offset) {
   const array = res.match(/.{2}/g)
-  const numOffset = getOffset(offset)
-  const newArray = array.slice(numOffset)
+  const newArray = array.slice(offset)
   const temp = newArray.slice(0, newArray.indexOf('00')).join('')
-  if (temp[temp.length - 4] === 'c') return getFromPointer(res, temp.slice(-4))
+  if (temp[temp.length - 4] === 'c') {
+    return getFromPointer(res, getOffset(temp.slice(-4)))
+  }
   return '.' + helper.hexToString(temp)
 }
 
@@ -160,6 +159,18 @@ function getOffset (hex) {
   })
   const string = newArray.join('').slice(2)
   return parseInt(string, 2)
+}
+
+function getSoaAddress (res, complete) {
+  const obj = {}
+  obj.primaryNS = ''
+  obj.RAMailbox = ''
+  obj.serialNumber = helper.hexToDecimal(res.slice(-40, -32))
+  obj.refreshInterval = helper.getDecimalValue(res.slice(-32, -24))
+  obj.retryInterval = helper.getDecimalValue(res.slice(-24, -16))
+  obj.expireLimit = helper.getDecimalValue(res.slice(-16, -8))
+  obj.minimumTTL = helper.getDecimalValue(res.slice(-8))
+  return obj
 }
 
 module.exports = {
