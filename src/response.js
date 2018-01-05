@@ -113,7 +113,7 @@ function getMXAddress(complete, res, name) {
       address += helper.individualHexToString(array[i])
     }
   }
-  if (!address.endsWith('com.')) return address.slice(1) + '.' + name
+  if (!(address.endsWith('com.') || address.endsWith('com'))) return address.slice(1) + '.' + name
   return address.slice(1)
 }
 
@@ -151,7 +151,6 @@ function getOffset(hex) {
 function getIPv6Address(res) {
   let address
   address = res.match(/.{4}/g).join(':')
-  address = address.replace(':0', ':')
   return address
 }
 
