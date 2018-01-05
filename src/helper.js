@@ -20,7 +20,7 @@ function getType(type) {
     case '0002':
       return 'NS'
     case '0006':
-      return 'S0A'
+      return 'SOA'
     case '0005':
       return 'CNAME'
     case '000f':
