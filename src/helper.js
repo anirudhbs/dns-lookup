@@ -21,8 +21,6 @@ function getType (type) {
       return 'NS'
     case '0006':
       return 'SOA'
-    case '0005':
-      return 'CNAME'
     case '000f':
       return 'MX'
     case '0010':
@@ -42,10 +40,10 @@ function setType (type) {
       return '000f'
     case 'ns':
       return '0002'
-    case 'cname':
-      return '0005'
     case 'txt':
       return '0010'
+    case 'soa':
+      return '0006'
     default:
       return '0001'
   }
@@ -95,6 +93,8 @@ function hexToString (hex) {
   return arr.join('').slice(1)
 }
 
+const hexToDecimal = res => parseInt(res, 16)
+
 module.exports = {
   getDecimalValue,
   getClass,
@@ -103,5 +103,6 @@ module.exports = {
   getErrors,
   getQueryType,
   hexToString,
-  individualHexToString
+  individualHexToString,
+  hexToDecimal
 }
