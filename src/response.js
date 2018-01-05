@@ -40,8 +40,7 @@ function flagObject (hex) {
 function getBits (hex) {
   const bits = hex.match(/.{1}/g).map((cur) => {
     const value = parseInt(cur).toString(2)
-    if (value.length === 1) return '000' + value
-    return value
+    return (value.length === 1) ? ('000' + value) : value
   })
   return bits.join('')
 }
@@ -124,14 +123,20 @@ function getMXAddress (res, complete) {
       address += helper.individualHexToString(array[i])
     }
   }
-  if (address.endsWith('org.') || address.endsWith('uk.') || address.endsWith('net.')) return address.slice(1)
+  if (address.endsWith('org.') || address.endsWith('uk.') || address.endsWith('net.') || address.endsWith('biz.')) return address.slice(1)
+  if (address.endsWith('net')) return address
   if (!(address.endsWith('com.') || address.endsWith('com'))) {
     return address.slice(1) + '.' + getFromPointer(complete, getOffset('c00c'))
   }
   return address.slice(1)
 }
 
-const getNSAddress = (res, complete) => 'ns' + getMXAddress(res, complete)
+const getNSAddress = (res, complete) => {
+  const address = getMXAddress(res, complete)
+  if (address.startsWith('ns')) return address
+  if (address.startsWith('n')) return 'n' + address
+  return 'ns' + address
+}
 
 function getFromPointer (res, offset) {
   const array = res.match(/.{2}/g)

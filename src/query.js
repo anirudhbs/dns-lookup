@@ -7,7 +7,7 @@ function makeQuery (url, queryType) {
     hexString.push(getHex(cur.length.toString(16)))
     hexString.push(stringToHex(cur))
   })
-  hexString.push('00') // last . in url
+  hexString.push('00') // last . in domain
   hexString.push(helper.setType(queryType)) // type
   hexString.push('0001') // class
   return hexString.join('')

@@ -14,6 +14,7 @@ function sendQuery (buf, HOST = '8.8.8.8', cb) {
     const responseObject = response.getObject(query.data, msg.toString('hex'))
     client.close(() => {
     })
+    responseObject.answers = responseObject.answers.filter((cur) => cur.type === responseObject.queries.type)
     cb(null, responseObject)
   })
 }
