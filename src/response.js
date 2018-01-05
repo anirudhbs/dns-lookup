@@ -66,33 +66,47 @@ function getAnswerObject (req, res, name) {
     obj.class = helper.getClass(cur.slice(4, 8))
     obj.ttl = helper.getDecimalValue(cur.slice(8, 16))
     obj.length = helper.getDecimalValue(cur.slice(16, 20))
-
-    switch (obj.type) {
-      case 'A':
-        obj.address = getIPv4Address(cur.slice(20))
-        break
-      case 'MX':
-        obj.preference = getPreference(cur.slice(20, 24))
-        obj.address = getMXAddress(res, cur.slice(24), name)
-        break
-      case 'AAAA':
-        obj.address = getIPv6Address(cur.slice(20))
-        break
-      case 'NS':
-        obj.address = getNSAddress(res, cur.slice(20), name)
-        break
-      case 'CNAME':
-        obj.address = getCnameAddress(cur.slice(20))
-        break
-      case 'TXT':
-        obj.address = getTxtAddress(cur.slice(20))
-        break
-      default:
-        obj.address = null
+    if (obj.type === 'MX') {
+      obj.preference = getPreference(cur.slice(20, 24))
     }
+    obj.address = getAddress(cur, obj.type, res)
     answerArray.push(obj)
   })
   return answerArray
+}
+
+function getAddress (cur, type, res) {
+  switch (type) {
+    case 'A':
+      return getIPv4Address(cur.slice(20))
+    case 'MX':
+      return getMXAddress(cur.slice(24), res)
+    case 'AAAA':
+      return getIPv6Address(cur.slice(20))
+    case 'NS':
+      return getNSAddress(cur.slice(24), res)
+    case 'CNAME':
+      return getCnameAddress(cur.slice(20))
+    case 'TXT':
+      return getTxtAddress(cur.slice(20))
+    default:
+      return null
+  }
+}
+
+function getIPv4Address (res) {
+  const string = res.match(/.{2}/g)
+  let address = ''
+  string.map((cur) => {
+    address += parseInt(cur, 16) + '.'
+  })
+  return address.slice(0, address.length - 1)
+}
+
+function getIPv6Address (res) {
+  let address
+  address = res.match(/.{4}/g).join(':')
+  return address
 }
 
 const getTxtAddress = res => helper.hexToString(res)
@@ -102,7 +116,9 @@ function getCnameAddress (res) {
   return address
 }
 
-function getMXAddress (complete, res, name) {
+const getPreference = res => parseInt(res, 16)
+
+function getMXAddress (res, complete) {
   const array = res.match(/.{2}/g)
   let address = ''
   for (let i = 0; i < array.length; i++) {
@@ -113,13 +129,11 @@ function getMXAddress (complete, res, name) {
       address += helper.individualHexToString(array[i])
     }
   }
-  if (!(address.endsWith('com.') || address.endsWith('com'))) return address.slice(1) + '.' + name
+  if (!(address.endsWith('com.') || address.endsWith('com'))) return address.slice(1) + '.' + getFromPointer(complete, 'c00c')
   return address.slice(1)
 }
 
-const getPreference = res => parseInt(res, 16)
-
-const getNSAddress = (complete, res, name) => getMXAddress(complete, res, name)
+const getNSAddress = (res, complete) => 'ns' + getMXAddress(res, complete)
 
 function getFromPointer (res, offset) {
   const array = res.match(/.{2}/g)
@@ -146,21 +160,6 @@ function getOffset (hex) {
   })
   const string = newArray.join('').slice(2)
   return parseInt(string, 2)
-}
-
-function getIPv6Address (res) {
-  let address
-  address = res.match(/.{4}/g).join(':')
-  return address
-}
-
-function getIPv4Address (res) {
-  const string = res.match(/.{2}/g)
-  let address = ''
-  string.map((cur) => {
-    address += parseInt(cur, 16) + '.'
-  })
-  return address.slice(0, address.length - 1)
 }
 
 module.exports = {
