@@ -1,14 +1,14 @@
 const helper = require('./helper')
 
-function getObject(res) {
+function getObject (res) {
   const obj = {}
   obj.header = getHeaderObject(res.slice(0, 24))
   obj.query = getQueryObject(res.slice(24))
-  obj.answers = getAnswerObject(res.slice(res.indexOf('c00c')), res)
+  obj.answers = getAnswerObject(res.slice(res.indexOf('c00c')), res).filter((cur) => cur.type === obj.query.type)
   return obj
 }
 
-function getHeaderObject(res) {
+function getHeaderObject (res) {
   const obj = {}
   obj.transactionID = res.slice(0, 4)
   obj.flags = getFlagObject(res.slice(4, 8))
@@ -19,7 +19,7 @@ function getHeaderObject(res) {
   return obj
 }
 
-function getFlagObject(hex) {
+function getFlagObject (hex) {
   const obj = {}
   const bits = helper.getBits(hex)
   obj.messageType = (bits.slice(0, 1) === '1') ? 'response' : 'request'
@@ -32,7 +32,7 @@ function getFlagObject(hex) {
   return obj
 }
 
-function getQueryObject(res) {
+function getQueryObject (res) {
   const obj = {}
   obj.name = helper.hexToString(res.slice(0, res.indexOf('00')))
   obj.length = obj.name.length
@@ -42,28 +42,23 @@ function getQueryObject(res) {
   return obj
 }
 
-function getAnswerObject(res, complete) {
-  const answers = []
+function getAnswerObject (res, complete) {
   const arrayOfAnswers = res.split('c00c').map((cur) => 'c00c' + cur).slice(1)
-  arrayOfAnswers.map((cur) => {
+  const answers = arrayOfAnswers.map((cur) => {
     const obj = {}
     const array = cur.match(/.{2}/g)
-    if (array[0].startsWith('c')) {
-      obj.name = getFromPointer(complete, getOffset(array[0] + array[1]))
-      obj.type = helper.getType(cur.slice(4, 8))
-      obj.class = helper.getClass(cur.slice(8, 12))
-      obj.ttl = helper.getDecimalValue(cur.slice(12, 20))
-      obj.length = helper.getDecimalValue(cur.slice(20, 24))
-      obj.address2 = getAddress(cur.slice(24), obj.type, complete)
-    } else {
-
-    }
-    answers.push(obj)
+    obj.name = getFromPointer(complete, getOffset(array[0] + array[1]))
+    obj.type = helper.getType(cur.slice(4, 8))
+    obj.class = helper.getClass(cur.slice(8, 12))
+    obj.ttl = helper.getDecimalValue(cur.slice(12, 20))
+    obj.length = helper.getDecimalValue(cur.slice(20, 24))
+    obj.address = getAddress(cur.slice(24), obj.type, complete)
+    return obj
   })
   return answers
 }
 
-function getFromPointer(complete, offset) {
+function getFromPointer (complete, offset) {
   const array = complete.match(/.{2}/g)
   const temp = array.slice(offset)
   if (array.includes('c0')) {
@@ -71,7 +66,7 @@ function getFromPointer(complete, offset) {
   }
 }
 
-function hexToString(complete, hex) {
+function hexToString (complete, hex) {
   const arr = []
   const temp = hex.match(/.{2}/g)
   if (temp.includes('c0')) {
@@ -85,7 +80,7 @@ function hexToString(complete, hex) {
   return arr.join('').slice(1)
 }
 
-function getOffset(hex) {
+function getOffset (hex) {
   const array = hex.match(/.{1}/g)
   const newArray = array.map((cur) => {
     const value = parseInt(cur, 16).toString(2)

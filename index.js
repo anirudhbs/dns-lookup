@@ -7,7 +7,7 @@ function lookMeUp (domain, type, options, cb) {
   lookup.sendQuery(buf, options.server, cb)
 }
 
-lookMeUp('google.com', 'mx', { server: '8.8.8.8', recursive: true }, (err, data) => {
+lookMeUp('twitter.com', 'a', { server: '8.8.8.8', recursive: true }, (err, data) => {
   if (err) throw err
   console.log(JSON.stringify(data, null, 2))
 })
