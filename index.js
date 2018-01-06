@@ -1,13 +1,13 @@
-const query = require('./src/query')
+const request = require('./src/request')
 const lookup = require('./src/lookup')
 
-function lookMeUp (domain, type, server, recursive, cb) {
-  let query1 = query.formRequest(domain, type, recursive)
-  const buf = Buffer.from(query1, 'hex')
-  lookup.sendQuery(buf, server, cb)
+function lookMeUp (domain, type, options, cb) {
+  let query = request.formRequest(domain, type, options.recursive)
+  const buf = Buffer.from(query, 'hex')
+  lookup.sendQuery(buf, options.server, cb)
 }
 
-lookMeUp('google.com', 'a', '8.8.8.8', true, (err, data) => {
+lookMeUp('google.com', 'mx', { server: '8.8.8.8', recursive: true }, (err, data) => {
   if (err) throw err
   console.log(JSON.stringify(data, null, 2))
 })

@@ -95,6 +95,25 @@ function hexToString (hex) {
 
 const hexToDecimal = res => parseInt(res, 16)
 
+const getHex = h => (h.length === 1) ? '0' + h : h
+
+function stringToHex (string) {
+  const hex = []
+  string.match(/.{1}/g).map((cur) => {
+    const h = cur.charCodeAt().toString(16)
+    hex.push(getHex(h))
+  })
+  return hex.join('')
+}
+
+function getBits (hex) {
+  const bits = hex.match(/.{1}/g).map((cur) => {
+    const value = parseInt(cur).toString(2)
+    return (value.length === 1) ? ('000' + value) : value
+  })
+  return bits.join('')
+}
+
 module.exports = {
   getDecimalValue,
   getClass,
@@ -104,5 +123,8 @@ module.exports = {
   getQueryType,
   hexToString,
   individualHexToString,
-  hexToDecimal
+  hexToDecimal,
+  getHex,
+  stringToHex,
+  getBits
 }
