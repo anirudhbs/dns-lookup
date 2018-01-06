@@ -54,7 +54,7 @@ function getAnswerObject(res, complete) {
       obj.class = helper.getClass(cur.slice(8, 12))
       obj.ttl = helper.getDecimalValue(cur.slice(12, 20))
       obj.length = helper.getDecimalValue(cur.slice(20, 24))
-      obj.address = ''
+      obj.address2 = getAddress(cur.slice(24), obj.type, complete)
     } else {
 
     }
@@ -102,6 +102,35 @@ function getOffset(hex) {
   const string = newArray.join('').slice(2)
   return parseInt(string, 2)
 }
+
+function getAddress (cur, type, complete) {
+  switch (type) {
+    case 'A':
+      return getIPv4Address(cur)
+    case 'AAAA':
+      return getIPv6Address(cur)
+    case 'TXT':
+      return getTxtAddress(cur)
+    default:
+      return null
+  }
+}
+
+function getIPv4Address (res) {
+  const string = res.match(/.{2}/g)
+  const address = []
+  string.map((cur) => {
+    address.push(parseInt(cur, 16))
+  })
+  return address.join('.')
+}
+
+function getIPv6Address (res) {
+  const address = res.match(/.{4}/g).join(':')
+  return address
+}
+
+const getTxtAddress = res => helper.hexToString(res)
 
 module.exports = {
   getObject
